@@ -34,17 +34,27 @@ Set the following environment variables:
 
 ## API Documentation
 
-The server provides two MCP tools:
+The server provides 6 MCP tools:
 
 ### upsert_blinko_flash_note
 - Description: Write flash note (type 0) to Blinko
-- Parameters: 
+- Parameters:
   - `content` (string, required): Text content of the note
+- Returns: Success message with the created note ID
 
 ### upsert_blinko_note
 - Description: Write note (type 1) to Blinko
 - Parameters:
   - `content` (string, required): Text content of the note
+- Returns: Success message with the created note ID
+
+### share_blinko_note
+- Description: Share a note or cancel sharing
+- Parameters:
+  - `noteId` (number, required): ID of the note to share
+  - `password` (string, optional): Six-digit password for sharing
+  - `isCancel` (boolean, optional): Whether to cancel sharing (default: false)
+- Returns: Share status, password (if set), and share link (if successful)
 
 ### search_blinko_notes
 - Description: Search notes in Blinko with various filters
@@ -58,10 +68,12 @@ The server provides two MCP tools:
   - `startDate` (string, optional): Start date in ISO format
   - `endDate` (string, optional): End date in ISO format
   - `hasTodo` (boolean, optional): Search only in notes with todos
+- Returns: List of matching notes with their IDs and content
 
 ### review_blinko_daily_notes
 - Description: Get today's notes for review
 - Parameters: None
+- Returns: List of today's review notes with their IDs and content
 
 ### clear_blinko_recycle_bin
 - Description: Clear the recycle bin in Blinko

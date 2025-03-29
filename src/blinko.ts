@@ -22,8 +22,23 @@ export interface Note {
   isShare: boolean;
   isTop: boolean;
   isReviewed: boolean;
+  sharePassword?: string;
+  shareEncryptedUrl?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShareNoteParams {
+  id: number;
+  isCancel?: boolean;
+  password?: string;
+}
+
+export interface ShareNoteResult {
+  id: number;
+  isShare: boolean;
+  sharePassword?: string;
+  shareEncryptedUrl?: string | null;
 }
 
 export class BlinkoClient {
@@ -132,9 +147,9 @@ export class BlinkoClient {
    * Upsert a note to Blinko.
    * @param content - The content of the note.
    * @param type - 0 for flash note, 1 for normal note.
-   * @returns The result of the operation.
+   * @returns The created/updated note.
    */
-  async upsertNote({ content, type = 0 }: { content: string; type?: 0 | 1 }) {
+  async upsertNote({ content, type = 0 }: { content: string; type?: 0 | 1 }): Promise<Note> {
     try {
       if (!content) {
         throw new Error("invalid content");
@@ -157,7 +172,47 @@ export class BlinkoClient {
         throw new Error(`request failed with status ${resp.status}: ${errorText}`);
       }
 
-      return { success: true };
+      return await resp.json();
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /**
+   * Share a note or cancel sharing.
+   * @param params - Share parameters including note ID and optional password
+   * @returns The result of the share operation
+   */
+  async shareNote(params: ShareNoteParams): Promise<ShareNoteResult> {
+    try {
+      const apiUrl = `https://${this.domain}/api/v1/note/share`;
+      const reqBody = {
+        id: params.id,
+        isCancel: params.isCancel ?? false,
+        password: params.password ?? "",
+      };
+
+      const resp = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(reqBody),
+      });
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        throw new Error(`request failed with status ${resp.status}: ${errorText}`);
+      }
+
+      const result = await resp.json();
+      return {
+        id: result.id,
+        isShare: result.isShare,
+        sharePassword: result.sharePassword,
+        shareEncryptedUrl: result.shareEncryptedUrl,
+      };
     } catch (e) {
       throw e;
     }

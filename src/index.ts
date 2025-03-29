@@ -85,6 +85,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "share_blinko_note",
+        description: "Share a note or cancel sharing",
+        inputSchema: {
+          type: "object",
+          properties: {
+            noteId: {
+              type: "number",
+              description: "ID of the note to share",
+            },
+            password: {
+              type: "string",
+              description: "Six-digit password for sharing (optional)",
+              pattern: "^\\d{6}$",
+            },
+            isCancel: {
+              type: "boolean",
+              description: "Whether to cancel sharing (default: false)",
+            },
+          },
+          required: ["noteId"],
+        },
+      },
+      {
         name: "search_blinko_notes",
         description: "Search for notes in Blinko",
         inputSchema: {
@@ -174,17 +197,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       const type = request.params.name === "upsert_blinko_flash_note" ? 0 : 1;
-      const result = await blinko.upsertNote({ content, type });
-
-      if (!result.success) {
-        throw new Error("Failed to write note to Blinko");
-      }
+      const note = await blinko.upsertNote({ content, type });
 
       return {
         content: [
           {
             type: "text",
-            text: `Write note to Blinko success.`,
+            text: `Successfully wrote note to Blinko. Note ID: ${note.id}`,
           },
         ],
       };
@@ -227,7 +246,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- ${note.content}`,
+            text: `- [ID: ${note.id}] ${note.content}`,
           })),
         ],
       };
@@ -244,10 +263,59 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- ${note.content}`,
+            text: `- [ID: ${note.id}] ${note.content}`,
           })),
         ],
       };
+    }
+
+    case "share_blinko_note": {
+      const noteId = Number(request.params.arguments?.noteId);
+      if (!noteId || isNaN(noteId)) {
+        throw new Error("Valid note ID is required");
+      }
+
+      const { password, isCancel } = request.params.arguments || {};
+      const passwordStr = password ? String(password) : "";
+      
+      // 验证密码格式（如果提供）
+      if (passwordStr && !/^\d{6}$/.test(passwordStr)) {
+        throw new Error("Password must be exactly 6 digits");
+      }
+
+      const result = await blinko.shareNote({
+        id: noteId,
+        password: passwordStr,
+        isCancel: Boolean(isCancel),
+      });
+
+      if (result.isShare) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully shared note (ID: ${result.id})`,
+            },
+            ...(result.sharePassword ? [{
+              type: "text",
+              text: `Share password: ${result.sharePassword}`,
+            }] : []),
+            {
+              type: "text",
+              text: `Share link: ${result.shareEncryptedUrl || "N/A"}`,
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully cancelled sharing for note (ID: ${result.id})`,
+            },
+          ],
+        };
+      }
     }
 
     case "clear_blinko_recycle_bin": {
