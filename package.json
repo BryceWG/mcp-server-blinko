@@ -6,7 +6,7 @@
   "type": "module",
   "homepage": "https://github.com/BryceWG/mcp-server-blinko",
   "bin": {
-    "mcp-server-blinko": "./build/index.js"
+    "mcp-server-blinko": "build/index.js"
   },
   "files": [
     "build"
@@ -18,10 +18,10 @@
     "inspector": "npx @modelcontextprotocol/inspector build/index.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "0.6.0"
+    "@modelcontextprotocol/sdk": "^0.6.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
+    "@types/node": "^20.17.28",
     "typescript": "^5.3.3"
   }
 }
