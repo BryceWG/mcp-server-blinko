@@ -1,6 +1,6 @@
 # Blinko MCP Server
 
-A Model Context Protocol (MCP) server for interacting with Blinko note service.
+A Model Context Protocol (MCP) server for interacting with [Blinko](https://github.com/blinko-space/blinko) note service.
 
 ## Features
 
@@ -8,9 +8,19 @@ A Model Context Protocol (MCP) server for interacting with Blinko note service.
 - Upsert normal notes (type 1) to Blinko
 
 ## Installation
-
-```bash
-npm install -g mcp-server-blinko
+```json
+{
+  "mcpServers": {
+    "mcp-server-blinko": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-blinko"],
+      "env": {
+        "BLINKO_DOMAIN": "sample.blinko.com",
+        "BLINKO_API_KEY": "eyj..."
+      }
+    }
+  }
+}
 ```
 
 ## Usage
@@ -18,20 +28,6 @@ npm install -g mcp-server-blinko
 Set the following environment variables:
 - `BLINKO_DOMAIN`: Your Blinko service domain
 - `BLINKO_API_KEY`: Your Blinko API key
-
-Or pass them as command line arguments:
-```bash
-mcp-server-blinko --blinko_domain=your.domain --blinko_api_key=your-api-key
-```
-
-## Development
-
-```bash
-npm install
-npm run dev  # Development mode with ts-node
-npm run build  # Build production version
-npm start  # Run production build
-```
 
 ## API Documentation
 
@@ -46,3 +42,8 @@ The server provides two MCP tools:
 - Description: Write note (type 1) to Blinko
 - Parameters:
   - `content` (string, required): Text content of the note
+
+## Acknowledgment
+- [mcp-server-flomo](https://github.com/chatmcp/mcp-server-flomo)
+
+Developed based on mcp-server-flomo project.
