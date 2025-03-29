@@ -227,7 +227,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- ${note.content.slice(0, 100)}${note.content.length > 100 ? '...' : ''}`,
+            text: `- ${note.content}`,
           })),
         ],
       };
@@ -244,7 +244,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- ${note.content.slice(0, 100)}${note.content.length > 100 ? '...' : ''}`,
+            text: `- ${note.content}`,
           })),
         ],
       };
