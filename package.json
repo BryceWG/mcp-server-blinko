@@ -1,12 +1,12 @@
 {
-  "name": "@chatmcp/mcp-server-flomo",
+  "name": "mcp-server-blinko",
   "version": "0.0.1",
-  "description": "write notes to flomo.",
+  "description": "MCP server for interacting with Blinko note service",
   "private": false,
   "type": "module",
-  "homepage": "https://github.com/chatmcp/mcp-server-flomo",
+  "homepage": "https://github.com/BryceWG/mcp-server-blinko",
   "bin": {
-    "mcp-server-flomo": "./build/index.js"
+    "mcp-server-blinko": "./build/index.js"
   },
   "files": [
     "build"

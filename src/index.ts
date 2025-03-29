@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * This is a MCP server that call flomo api to write notes.
+ * This is a MCP server that calls Blinko api to write notes.
  * It demonstrates core MCP concepts like tools by allowing:
- * - Writing notes to flomo via a tool
+ * - Writing flash notes (type 0) to Blinko
+ * - Writing normal notes (type 1) to Blinko
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -12,11 +13,11 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { FlomoClient } from "./flomo.js";
+import { BlinkoClient } from "./blinko.js";
 
 /**
  * Parse command line arguments
- * Example: node index.js --flomo_api_url=https://flomoapp.com/iwh/xxx/xxx/
+ * Example: node index.js --blinko_domain=example.com --blinko_api_key=your-api-key
  */
 function parseArgs() {
   const args: Record<string, string> = {};
@@ -30,14 +31,15 @@ function parseArgs() {
 }
 
 const args = parseArgs();
-const apiUrl = args.flomo_api_url || process.env.FLOMO_API_URL || "";
+const domain = args.blinko_domain || process.env.BLINKO_DOMAIN || "";
+const apiKey = args.blinko_api_key || process.env.BLINKO_API_KEY || "";
 
 /**
- * Create an MCP server with capabilities for tools (to write notes to flomo).
+ * Create an MCP server with capabilities for tools (to write notes to Blinko).
  */
 const server = new Server(
   {
-    name: "mcp-server-flomo",
+    name: "mcp-server-blinko",
     version: "0.0.1",
   },
   {
@@ -49,20 +51,34 @@ const server = new Server(
 
 /**
  * Handler that lists available tools.
- * Exposes a single "write_note" tool that lets clients create new notes.
+ * Exposes two tools for writing notes to Blinko.
  */
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "write_note",
-        description: "Write note to flomo",
+        name: "upsert_blinko_flash_note",
+        description: "Write flash note (type 0) to Blinko",
         inputSchema: {
           type: "object",
           properties: {
             content: {
               type: "string",
-              description: "Text content of the note with markdown format",
+              description: "Text content of the note",
+            },
+          },
+          required: ["content"],
+        },
+      },
+      {
+        name: "upsert_blinko_note",
+        description: "Write note (type 1) to Blinko",
+        inputSchema: {
+          type: "object",
+          properties: {
+            content: {
+              type: "string",
+              description: "Text content of the note",
             },
           },
           required: ["content"],
@@ -73,14 +89,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 /**
- * Handler for the write_note tool.
- * Creates a new note with the content, save to flomo and returns success message.
+ * Handler for the Blinko tools.
+ * Creates a new note with the content, saves to Blinko and returns success message.
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   switch (request.params.name) {
-    case "write_note": {
-      if (!apiUrl) {
-        throw new Error("Flomo API URL not set");
+    case "upsert_blinko_flash_note":
+    case "upsert_blinko_note": {
+      if (!domain) {
+        throw new Error("Blinko domain not set");
+      }
+      if (!apiKey) {
+        throw new Error("Blinko API key not set");
       }
 
       const content = String(request.params.arguments?.content);
@@ -88,22 +108,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error("Content is required");
       }
 
-      const flomo = new FlomoClient({ apiUrl });
-      const result = await flomo.writeNote({ content });
+      const type = request.params.name === "upsert_blinko_flash_note" ? 0 : 1;
+      const blinko = new BlinkoClient({ domain, apiKey });
+      const result = await blinko.upsertNote({ content, type });
 
-      if (!result.memo || !result.memo.slug) {
-        throw new Error(
-          `Failed to write note to flomo: ${result?.message || "unknown error"}`
-        );
+      if (!result.success) {
+        throw new Error("Failed to write note to Blinko");
       }
-
-      const flomoUrl = `https://v.flomoapp.com/mine/?memo_id=${result.memo.slug}`;
 
       return {
         content: [
           {
             type: "text",
-            text: `Write note to flomo success, view it at: ${flomoUrl}`,
+            text: `Write note to Blinko success.`,
           },
         ],
       };

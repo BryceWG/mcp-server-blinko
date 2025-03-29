@@ -1,67 +1,48 @@
-# mcp-server-flomo MCP Server
+# Blinko MCP Server
 
-write notes to Flomo.
-
-This is a TypeScript-based MCP server help you write notes to Flomo.
-
-![preview](./preview.png)
+A Model Context Protocol (MCP) server for interacting with Blinko note service.
 
 ## Features
 
-### Tools
-
-- `write_note` - Write text notes to Flomo
-  - Takes content as required parameters
-
-## Development
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Build the server:
-
-```bash
-npm run build
-```
-
-For development with auto-rebuild:
-
-```bash
-npm run watch
-```
+- Upsert flash notes (type 0) to Blinko
+- Upsert normal notes (type 1) to Blinko
 
 ## Installation
 
-To use with Claude Desktop, add the server config:
-
-On MacOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "mcp-server-flomo": {
-      "command": "npx",
-      "args": ["-y", "@chatmcp/mcp-server-flomo"],
-      "env": {
-        "FLOMO_API_URL": "https://flomoapp.com/iwh/xxx/xxx/"
-      }
-    }
-  }
-}
+```bash
+npm install -g mcp-server-blinko
 ```
 
-Find Your Flomo_API_URL [here](https://v.flomoapp.com/mine?source=incoming_webhook)
+## Usage
 
-### Debugging
+Set the following environment variables:
+- `BLINKO_DOMAIN`: Your Blinko service domain
+- `BLINKO_API_KEY`: Your Blinko API key
 
-Since MCP servers communicate over stdio, debugging can be challenging. We recommend using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), which is available as a package script:
+Or pass them as command line arguments:
+```bash
+mcp-server-blinko --blinko_domain=your.domain --blinko_api_key=your-api-key
+```
+
+## Development
 
 ```bash
-npm run inspector
+npm install
+npm run dev  # Development mode with ts-node
+npm run build  # Build production version
+npm start  # Run production build
 ```
 
-The Inspector will provide a URL to access debugging tools in your browser.
+## API Documentation
+
+The server provides two MCP tools:
+
+### upsert_blinko_flash_note
+- Description: Write flash note (type 0) to Blinko
+- Parameters: 
+  - `content` (string, required): Text content of the note
+
+### upsert_blinko_note
+- Description: Write note (type 1) to Blinko
+- Parameters:
+  - `content` (string, required): Text content of the note
