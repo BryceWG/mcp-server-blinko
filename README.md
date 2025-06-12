@@ -27,10 +27,28 @@ A Model Context Protocol (MCP) server for interacting with [Blinko](https://gith
 }
 ```
 
+### Domain Configuration Examples
+
+The `BLINKO_DOMAIN` environment variable supports flexible domain formats:
+
+```json
+// Pure domain examples
+"BLINKO_DOMAIN": "myblinko.com"
+"BLINKO_DOMAIN": "localhost:3000"
+"BLINKO_DOMAIN": "subdomain.example.com"
+
+// Full URL examples  
+"BLINKO_DOMAIN": "https://myblinko.com"
+"BLINKO_DOMAIN": "http://localhost:3000"
+"BLINKO_DOMAIN": "https://myblinko.com:8080"
+```
+
 ## Usage
 
 Set the following environment variables:
-- `BLINKO_DOMAIN`: Your Blinko service domain
+- `BLINKO_DOMAIN`: Your Blinko service domain. Supports both formats:
+  - Pure domain: `example.com` or `example.com:3000`
+  - Full URL: `https://example.com` or `http://example.com:3000`
 - `BLINKO_API_KEY`: Your Blinko API key
 
 ## API Documentation

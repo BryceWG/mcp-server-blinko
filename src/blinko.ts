@@ -42,17 +42,41 @@ export interface ShareNoteResult {
 }
 
 export class BlinkoClient {
-  private readonly domain: string;
+  private readonly baseUrl: string;
   private readonly apiKey: string;
 
   /**
    * Create a new Blinko client.
-   * @param domain - The domain of Blinko service.
+   * @param domain - The domain of Blinko service. Supports both formats:
+   *                 - Pure domain: "example.com" or "example.com:3000"
+   *                 - Full URL: "https://example.com" or "http://example.com:3000"
    * @param apiKey - The API key for authentication.
    */
   constructor({ domain, apiKey }: { domain: string; apiKey: string }) {
-    this.domain = domain;
+    this.baseUrl = this.normalizeDomain(domain);
     this.apiKey = apiKey;
+  }
+
+  /**
+   * Normalize domain to a full base URL.
+   * @param domain - Input domain in various formats
+   * @returns Normalized base URL
+   */
+  private normalizeDomain(domain: string): string {
+    if (!domain) {
+      throw new Error("Domain cannot be empty");
+    }
+
+    // Remove trailing slash if present
+    domain = domain.replace(/\/$/, '');
+
+    // If domain already starts with http:// or https://, use it as is
+    if (domain.startsWith('http://') || domain.startsWith('https://')) {
+      return domain;
+    }
+
+    // Otherwise, assume it's a pure domain and add https://
+    return `https://${domain}`;
   }
 
   /**
@@ -62,7 +86,7 @@ export class BlinkoClient {
    */
   async searchNotes(params: SearchNotesParams): Promise<Note[]> {
     try {
-      const apiUrl = `https://${this.domain}/api/v1/note/list`;
+      const apiUrl = `${this.baseUrl}/api/v1/note/list`;
       const resp = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -99,7 +123,7 @@ export class BlinkoClient {
    */
   async getDailyReviewNotes(): Promise<Note[]> {
     try {
-      const apiUrl = `https://${this.domain}/api/v1/note/daily-review-list`;
+      const apiUrl = `${this.baseUrl}/api/v1/note/daily-review-list`;
       const resp = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -124,7 +148,7 @@ export class BlinkoClient {
    */
   async clearRecycleBin(): Promise<{ success: boolean }> {
     try {
-      const apiUrl = `https://${this.domain}/api/v1/note/clear-recycle-bin`;
+      const apiUrl = `${this.baseUrl}/api/v1/note/clear-recycle-bin`;
       const resp = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -155,7 +179,7 @@ export class BlinkoClient {
         throw new Error("invalid content");
       }
 
-      const apiUrl = `https://${this.domain}/api/v1/note/upsert`;
+      const apiUrl = `${this.baseUrl}/api/v1/note/upsert`;
       const reqBody = { content, type };
 
       const resp = await fetch(apiUrl, {
@@ -185,7 +209,7 @@ export class BlinkoClient {
    */
   async shareNote(params: ShareNoteParams): Promise<ShareNoteResult> {
     try {
-      const apiUrl = `https://${this.domain}/api/v1/note/share`;
+      const apiUrl = `${this.baseUrl}/api/v1/note/share`;
       const reqBody = {
         id: params.id,
         isCancel: params.isCancel ?? false,
