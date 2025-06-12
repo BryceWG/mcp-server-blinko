@@ -6,6 +6,7 @@ A Model Context Protocol (MCP) server for interacting with [Blinko](https://gith
 
 - Upsert flash notes (type 0) to Blinko
 - Upsert normal notes (type 1) to Blinko
+- Upsert todos (type 2) to Blinko
 - Search notes with various filters
 - Get daily review notes
 - Clear recycle bin
@@ -34,7 +35,7 @@ Set the following environment variables:
 
 ## API Documentation
 
-The server provides 6 MCP tools:
+The server provides 7 MCP tools:
 
 ### upsert_blinko_flash_note
 - Description: Write flash note (type 0) to Blinko
@@ -47,6 +48,12 @@ The server provides 6 MCP tools:
 - Parameters:
   - `content` (string, required): Text content of the note
 - Returns: Success message with the created note ID
+
+### upsert_blinko_todo
+- Description: Write todo (type 2) to Blinko
+- Parameters:
+  - `content` (string, required): Text content of the todo
+- Returns: Success message with the created todo ID
 
 ### share_blinko_note
 - Description: Share a note or cancel sharing

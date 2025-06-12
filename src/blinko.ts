@@ -149,7 +149,7 @@ export class BlinkoClient {
    * @param type - 0 for flash note, 1 for normal note.
    * @returns The created/updated note.
    */
-  async upsertNote({ content, type = 0 }: { content: string; type?: 0 | 1 }): Promise<Note> {
+  async upsertNote({ content, type = 0 }: { content: string; type?: 0 | 1 | 2 }): Promise<Note> {
     try {
       if (!content) {
         throw new Error("invalid content");

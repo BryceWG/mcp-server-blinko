@@ -85,6 +85,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "upsert_blinko_todo",
+        description: "Write todo (type 2) to Blinko",
+        inputSchema: {
+          type: "object",
+          properties: {
+            content: {
+              type: "string",
+              description: "Text content of the todo",
+            },
+          },
+          required: ["content"],
+        },
+      },
+      {
         name: "share_blinko_note",
         description: "Share a note or cancel sharing",
         inputSchema: {
@@ -190,14 +204,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (request.params.name) {
     case "upsert_blinko_flash_note":
-    case "upsert_blinko_note": {
+    case "upsert_blinko_note":
+    case "upsert_blinko_todo": {
       const content = String(request.params.arguments?.content);
       if (!content) {
         throw new Error("Content is required");
       }
 
-      const type = request.params.name === "upsert_blinko_flash_note" ? 0 : 1;
-      const note = await blinko.upsertNote({ content, type });
+      let type: number;
+      if (request.params.name === "upsert_blinko_flash_note") {
+        type = 0;
+      } else if (request.params.name === "upsert_blinko_note") {
+        type = 1;
+      } else {
+        type = 2; 
+      }
+      const note = await blinko.upsertNote({ content, type: type as 0 | 1 | 2 });
 
       return {
         content: [
