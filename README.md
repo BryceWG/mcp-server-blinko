@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server for interacting with [Blinko](https://gith
   "mcpServers": {
     "mcp-server-blinko": {
       "command": "npx",
-      "args": ["-y", "mcp-server-blinko@0.0.8"],
+      "args": ["-y", "mcp-server-blinko@0.0.9"],
       "env": {
         "BLINKO_DOMAIN": "https://sample.blinko.com",
         "BLINKO_API_KEY": "eyj..."

@@ -3,7 +3,7 @@
  */
 export interface SearchNotesParams {
   size?: number;
-  type?: -1 | 0 | 1;
+  type?: -1 | 0 | 1 | 2;
   isArchived?: boolean;
   isRecycle?: boolean;
   searchText: string;

@@ -58,7 +58,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "upsert_blinko_flash_note",
-        description: "Write flash note (type 0) to Blinko",
+        description: "Create or update a flash note (type 0) in Blinko. Flash notes are designed for quick thoughts, ideas, or brief observations that you want to capture rapidly.",
         inputSchema: {
           type: "object",
           properties: {
@@ -72,7 +72,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "upsert_blinko_note",
-        description: "Write note (type 1) to Blinko",
+        description: "Create or update a normal note (type 1) in Blinko. Normal notes are suitable for detailed content, longer thoughts, documentation, or structured information.",
         inputSchema: {
           type: "object",
           properties: {
@@ -86,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "upsert_blinko_todo",
-        description: "Write todo (type 2) to Blinko",
+        description: "Create or update a todo note (type 2) in Blinko. Todo notes are designed for task management, checklists, and action items that need to be tracked and completed.",
         inputSchema: {
           type: "object",
           properties: {
@@ -100,22 +100,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "share_blinko_note",
-        description: "Share a note or cancel sharing",
+        description: "Share a note publicly or cancel an existing share. Creates a public link that others can access, optionally protected with a password.",
         inputSchema: {
           type: "object",
           properties: {
             noteId: {
               type: "number",
-              description: "ID of the note to share",
+              description: "ID of the note to share. Use the ID from search results or note creation responses.",
             },
             password: {
               type: "string",
-              description: "Six-digit password for sharing (optional)",
+              description: "Optional six-digit password for sharing protection (e.g., '123456'). If provided, viewers will need this password to access the shared note.",
               pattern: "^\\d{6}$",
             },
             isCancel: {
               type: "boolean",
-              description: "Whether to cancel sharing (default: false)",
+              description: "Set to true to cancel/disable sharing for this note (default: false). Use this to revoke public access to a previously shared note.",
             },
           },
           required: ["noteId"],
@@ -123,46 +123,46 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "search_blinko_notes",
-        description: "Search for notes in Blinko",
+        description: "Search for notes in Blinko. Returns notes with content, timestamps, and metadata.",
         inputSchema: {
           type: "object",
           properties: {
             searchText: {
               type: "string",
-              description: "Search keyword",
+              description: "Search keyword or phrase. Use this to find notes containing specific text content.",
             },
             size: {
               type: "number",
-              description: "Number of results to return (default: 5)",
+              description: "Number of results to return (default: 5). Use larger values when you need more comprehensive search results.",
             },
             type: {
               type: "number",
-              enum: [-1, 0, 1],
-              description: "Note type: -1 for all, 0 for flash notes, 1 for normal notes",
+              enum: [-1, 0, 1, 2],
+              description: "Note type filter: -1 for all types (default), 0 for flash notes, 1 for normal notes, 2 for todo notes. Use specific types when you need to filter by note category.",
             },
             isArchived: {
               type: "boolean",
-              description: "Search in archived notes",
+              description: "Search in archived notes (default: false). Set to true when you need to find notes that have been archived for long-term storage.",
             },
             isRecycle: {
               type: "boolean",
-              description: "Search in recycled notes",
+              description: "Search in recycled/deleted notes (default: false). Set to true when you need to recover or find deleted notes.",
             },
             isUseAiQuery: {
               type: "boolean",
-              description: "Use AI-powered search",
+              description: "Use AI-powered semantic search (default: true). Set to false for exact text matching only. AI search is better for finding conceptually related content.",
             },
             startDate: {
               type: "string",
-              description: "Start date in ISO format (e.g. 2025-03-03T00:00:00.000Z)",
+              description: "Start date for time-based filtering in ISO format (e.g. 2025-03-03T00:00:00.000Z). Use when searching for notes created after a specific date.",
             },
             endDate: {
               type: "string",
-              description: "End date in ISO format (e.g. 2025-03-03T00:00:00.000Z)",
+              description: "End date for time-based filtering in ISO format (e.g. 2025-03-03T00:00:00.000Z). Use when searching for notes created before a specific date.",
             },
             hasTodo: {
               type: "boolean",
-              description: "Search only in notes with todos",
+              description: "Search only in notes containing todo items (default: false). Set to true when looking for notes with task lists or checkboxes.",
             }
           },
           required: ["searchText"],
@@ -170,7 +170,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "review_blinko_daily_notes",
-        description: "Get today's notes for review",
+        description: "Retrieve today's notes for daily review and reflection. This helps with reviewing recent thoughts, tasks, and ideas to maintain productivity and mindfulness.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -178,7 +178,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "clear_blinko_recycle_bin",
-        description: "Clear the recycle bin in Blinko",
+        description: "Permanently delete all notes in the recycle bin. WARNING: This action cannot be undone. Use only when you're certain you want to permanently remove all deleted notes.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -248,10 +248,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         hasTodo,
       } = request.params.arguments || {};
 
+      // Support type 2 (todo notes) in addition to existing types
+      let noteType: -1 | 0 | 1 | 2 = -1;
+      if (type === 0 || type === 1 || type === 2) {
+        noteType = type;
+      }
+
       const notes = await blinko.searchNotes({
         searchText,
         size: Number(size) || undefined,
-        type: type === 0 || type === 1 ? type : -1,
+        type: noteType,
         isArchived: Boolean(isArchived),
         isRecycle: Boolean(isRecycle),
         isUseAiQuery: isUseAiQuery !== false,
@@ -259,6 +265,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         endDate: endDate ? String(endDate) : null,
         hasTodo: Boolean(hasTodo),
       });
+
+      // Helper function to format date
+      const formatDate = (dateStr: string) => {
+        try {
+          return new Date(dateStr).toLocaleString();
+        } catch {
+          return dateStr;
+        }
+      };
+
+      // Helper function to get note type description
+      const getTypeDescription = (type: number) => {
+        switch (type) {
+          case 0: return "Flash Note";
+          case 1: return "Normal Note";
+          case 2: return "Todo Note";
+          default: return "Unknown";
+        }
+      };
 
       return {
         content: [
@@ -268,7 +293,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- [ID: ${note.id}] ${note.content}`,
+            text: `- [ID: ${note.id}] [${getTypeDescription(note.type)}] ${note.content}\n  Created: ${formatDate(note.createdAt)} | Updated: ${formatDate(note.updatedAt)}`,
           })),
         ],
       };
@@ -276,6 +301,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     case "review_blinko_daily_notes": {
       const notes = await blinko.getDailyReviewNotes();
+
+      // Helper function to format date
+      const formatDate = (dateStr: string) => {
+        try {
+          return new Date(dateStr).toLocaleString();
+        } catch {
+          return dateStr;
+        }
+      };
+
+      // Helper function to get note type description
+      const getTypeDescription = (type: number) => {
+        switch (type) {
+          case 0: return "Flash Note";
+          case 1: return "Normal Note";
+          case 2: return "Todo Note";
+          default: return "Unknown";
+        }
+      };
 
       return {
         content: [
@@ -285,7 +329,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
           ...notes.map((note) => ({
             type: "text",
-            text: `- [ID: ${note.id}] ${note.content}`,
+            text: `- [ID: ${note.id}] [${getTypeDescription(note.type)}] ${note.content}\n  Created: ${formatDate(note.createdAt)} | Updated: ${formatDate(note.updatedAt)}`,
           })),
         ],
       };
